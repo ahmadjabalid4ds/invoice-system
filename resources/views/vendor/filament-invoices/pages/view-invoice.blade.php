@@ -2,6 +2,9 @@
     <x-filament-panels::page>
         <x-filament::section >
             <div>
+                @php
+                $symbol =$this->getRecord()->currency?->iso == 'SAR' ? 'sar' : $this->getRecord()->currency?->iso
+                    @endphp
                 <div class="flex justify-between xl:gap-60 lg:gap-48 md:gap-16 sm:gap-8 sm:flex-row flex-col gap-4">
                     <div class="w-full">
                         <div>
@@ -137,24 +140,24 @@
                                                 <div>
                                                     <div class="flex justify-between">
                                                         <span class="text-sm text-gray-400 uppercase w-full">{{trans('filament-invoices::messages.invoices.view.price')}}:</span>
-                                                        <span class="w-full">
-                                                    {{ number_format($item->price, 2) }}<small class="text-md font-normal">{{ $this->getRecord()->currency?->iso }} </small>
+                                                        <span class="w-full flex flex-row items-center content-center">
+                                                    {{ number_format($item->price, 2) }} @include('vendor.filament-invoices.settings.currency')
                                                 </span>
                                                     </div>
                                                 </div>
                                                 <div>
                                                     <div class="flex justify-between">
                                                         <span class="text-sm text-gray-400 uppercase w-full">{{trans('filament-invoices::messages.invoices.view.vat')}}:</span>
-                                                        <span class="w-full">
-                                                    {{ number_format($item->tax, 2) }}<small class="text-md font-normal">{{ $this->getRecord()->currency?->iso }}</small>
+                                                        <span class="w-full flex flex-row items-center content-center">
+                                                    {{ number_format($item->tax, 2) }} @include('vendor.filament-invoices.settings.currency')
                                                 </span>
                                                     </div>
                                                 </div>
                                                 <div>
                                                     <div class="flex justify-between">
                                                         <span class="text-sm text-gray-400 uppercase w-full">{{trans('filament-invoices::messages.invoices.view.discount')}}:</span>
-                                                        <span class="w-full">
-                                                    {{ number_format($item->discount, 2) }}<small class="text-md font-normal">{{ $this->getRecord()->currency?->iso }}</small>
+                                                        <span class="w-full flex flex-row items-center content-center">
+                                                    {{ number_format($item->discount, 2) }} @include('vendor.filament-invoices.settings.currency')
                                                 </span>
                                                     </div>
                                                 </div>
@@ -169,8 +172,8 @@
                                                 <div>
                                                     <div class="flex justify-between">
                                                         <span class="text-sm text-gray-400 uppercase w-full">{{trans('filament-invoices::messages.invoices.view.total')}}:</span>
-                                                        <span class="w-full font-bold">
-                                                        {{ number_format($item->total, 2) }}<small class="text-md font-normal">{{ $this->getRecord()->currency?->iso }}</small>
+                                                        <span class="w-full font-bold flex flex-row items-center content-center">
+                                                        {{ number_format($item->total, 2) }} @include('vendor.filament-invoices.settings.currency')
                                                     </span>
                                                     </div>
                                                 </div>
@@ -237,40 +240,40 @@
                                 <div class="font-bold">
                                     {{trans('filament-invoices::messages.invoices.view.subtotal')}}
                                 </div>
-                                <div>
-                                    {{ number_format(($this->getRecord()->total + $this->getRecord()->discount) - ($this->getRecord()->vat + $this->getRecord()->shipping), 2) }}<small class="text-md font-normal">{{ $this->getRecord()->currency?->iso }}</small>
+                                <div class="flex flex-row items-center content-center">
+                                    {{ number_format(($this->getRecord()->total + $this->getRecord()->discount) - ($this->getRecord()->vat + $this->getRecord()->shipping), 2) }} @include('vendor.filament-invoices.settings.currency')
                                 </div>
                             </div>
                             <div class="flex justify-between">
                                 <div class="font-bold">
                                     {{trans('filament-invoices::messages.invoices.view.tax')}}
                                 </div>
-                                <div>
-                                    {{ number_format($this->getRecord()->vat, 2) }}<small class="text-md font-normal">{{ $this->getRecord()->currency?->iso }}</small>
+                                <div class="flex flex-row items-center content-center">
+                                    {{ number_format($this->getRecord()->vat, 2) }} @include('vendor.filament-invoices.settings.currency')
                                 </div>
                             </div>
                             <div class="flex justify-between">
                                 <div class="font-bold">
                                     {{trans('filament-invoices::messages.invoices.view.discount')}}
                                 </div>
-                                <div>
-                                    {{ number_format($this->getRecord()->discount, 2) }}<small class="text-md font-normal">{{ $this->getRecord()->currency?->iso }}</small>
+                                <div class="flex flex-row items-center content-center">
+                                    {{ number_format($this->getRecord()->discount, 2) }} @include('vendor.filament-invoices.settings.currency')
                                 </div>
                             </div>
                             <div class="flex justify-between border-b border-gray-200 dark:border-gray-700 pb-4">
                                 <div class="font-bold">
                                     {{trans('filament-invoices::messages.invoices.view.paid')}}
                                 </div>
-                                <div>
-                                    {{ number_format($this->getRecord()->paid, 2) }}<small class="text-md font-normal">{{ $this->getRecord()->currency?->iso }}</small>
+                                <div class="flex flex-row items-center content-center">
+                                    {{ number_format($this->getRecord()->paid, 2) }} @include('vendor.filament-invoices.settings.currency')
                                 </div>
                             </div>
                             <div class="flex justify-between text-xl font-bold">
                                 <div>
                                     {{trans('filament-invoices::messages.invoices.view.balance_due')}}
                                 </div>
-                                <div>
-                                    {{ number_format($this->getRecord()->total-$this->getRecord()->paid, 2) }}<small class="text-md font-normal">{{ $this->getRecord()->currency?->iso }}</small>
+                                <div class="flex flex-row items-center content-center">
+                                    {{ number_format($this->getRecord()->total-$this->getRecord()->paid, 2) }} @include('vendor.filament-invoices.settings.currency')
                                 </div>
                             </div>
                         </div>

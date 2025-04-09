@@ -66,7 +66,7 @@ return [
     */
 
     'timezone' => 'UTC',
-    'force_https'=> env('FORCE_HTTPS',false),
+    'scheme'=> env('SCHEME','http'),
 
     /*
     |--------------------------------------------------------------------------

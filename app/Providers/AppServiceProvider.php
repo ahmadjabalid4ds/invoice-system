@@ -5,6 +5,11 @@ namespace App\Providers;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Uri;
+use TomatoPHP\FilamentInvoices\Facades\FilamentInvoices;
+use TomatoPHP\FilamentInvoices\Services\Contracts\InvoiceFor;
+use TomatoPHP\FilamentInvoices\Services\Contracts\InvoiceFrom;
+use App\Models\Account;
+use App\Models\Customer;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -13,9 +18,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        if(config('app.force_https')){
-            URL::forceScheme('https');
-        }
+        // URL::forceScheme(config("app.scheme"));
     }
 
     /**
@@ -23,6 +26,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        FilamentInvoices::registerFrom([
+            InvoiceFrom::make(Account::class)
+                ->label(__('account'))
+        ]);
+        FilamentInvoices::registerFor([
+            InvoiceFor::make(Customer::class)
+                ->label(__('customer'))
+        ]);
     }
 }
