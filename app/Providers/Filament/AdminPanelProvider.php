@@ -44,9 +44,9 @@ class AdminPanelProvider extends PanelProvider
                 // ->languages(false)
                 // ->currency(false)
                 // ->locations(false),
-                // \TomatoPHP\FilamentSettingsHub\FilamentSettingsHubPlugin::make()
-                // ->allowSiteSettings()
-                // ->allowSocialMenuSettings(),
+                \TomatoPHP\FilamentSettingsHub\FilamentSettingsHubPlugin::make()
+                ->allowSiteSettings()
+                ->allowSocialMenuSettings(),
 
             GreeterPlugin::make()
                 ->message(__('Welcome'))
