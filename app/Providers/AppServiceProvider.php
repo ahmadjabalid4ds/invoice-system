@@ -18,7 +18,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // URL::forceScheme(config("app.scheme"));
+        URL::forceScheme(config("app.scheme"));
     }
 
     /**
