@@ -8,7 +8,7 @@
                 <div class="flex justify-between xl:gap-60 lg:gap-48 md:gap-16 sm:gap-8 sm:flex-row flex-col gap-4">
                     <div class="w-full">
                         <div>
-                            <img src="{{url('storage/' . setting('site_logo'))}}" alt="{{setting('site_name')}}" class="w-16">
+                            <img src="{{ asset('images/favicon.png')}}" class="w-16">
                         </div>
                         <div class="flex flex-col">
                             <div class="text-sm text-gray-400  mt-3">
