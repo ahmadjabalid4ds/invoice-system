@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Resources\InvoiceResource;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -34,7 +35,13 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => '#a223fd',
             ])->plugins([
-                \TomatoPHP\FilamentInvoices\FilamentInvoicesPlugin::make(),
+                // \TomatoPHP\FilamentInvoices\FilamentInvoicesPlugin::make()->register(
+                //     $panel->resources(
+                //         [
+                //             InvoiceResource::class
+                //         ]
+                //     )
+                // ),
                 \Filament\SpatieLaravelTranslatablePlugin::make()->defaultLocales(['en', 'ar']),
                 \TomatoPHP\FilamentUsers\FilamentUsersPlugin::make(),
                 \TomatoPHP\FilamentLanguageSwitcher\FilamentLanguageSwitcherPlugin::make(),
