@@ -144,7 +144,7 @@
                 url: '/payment',
                 type: 'POST',
                 data: {
-                    invoice_id: '{{ $invoice->token }}',
+                    invoice_id: '{{ $invoice?->token }}',
                     session_id: response.sessionId,
                     payment_type: response.paymentType,
                     _token: '{{ csrf_token() }}'

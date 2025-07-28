@@ -18,11 +18,14 @@ class InvoiceController extends Controller
     public function index($id){
 
         $invoice = Invoice::where('token','=',$id)->first();
+        if (!$invoice) {
+            abort(404, 'Invoice not found');
+        }
         $data = new Myfatoorah();
         $comp = $data->initiateSession();
         $country_code = $comp['country_code'];
         $session_id = $comp['session_id'];
- 
+
         return view('pay', compact('session_id','country_code' ,'invoice'));
     }
     public function payment(Request $request){

@@ -10,19 +10,14 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
-use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Orion\FilamentBackup\BackupPlugin;
 use Orion\FilamentGreeter\GreeterPlugin;
-use Orion\FilamentFeedback\FeedbackPlugin;
 use Filament\Actions\Action;
-use Illuminate\Support\Facades\Auth;
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
@@ -32,6 +27,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()->font('IBM Plex Sans Arabic')
+            ->registration()->font('IBM Plex Sans Arabic')
             ->colors([
                 'primary' => '#a223fd',
             ])->plugins([
