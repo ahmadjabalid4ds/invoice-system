@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\TenantScope;
 use TomatoPHP\FilamentInvoices\Models\Invoice as BaseInvoice;
 use App\Models\Payment; // or wherever your related model is
 
@@ -51,6 +52,17 @@ class Invoice extends BaseInvoice
     public function payments()
     {
         return $this->hasMany(Payment::class);
+    }
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new TenantScope);
+
+        static::creating(function ($model) {
+            if (auth()->check()) {
+                $model->tenant_id = auth()->user()->tenant_id;
+            }
+        });
     }
 
     // You can still override other things here too

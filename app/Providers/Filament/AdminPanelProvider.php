@@ -2,7 +2,8 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Resources\InvoiceResource;
+use App\Models\Tenant;
+use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -17,7 +18,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Orion\FilamentGreeter\GreeterPlugin;
-use Filament\Actions\Action;
+
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel

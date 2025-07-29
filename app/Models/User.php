@@ -3,9 +3,13 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Scopes\TenantScope;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -24,6 +28,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'tenant_id',
     ];
 
     /**
@@ -47,5 +52,26 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function ($model) {
+            if (auth()->check()) {
+                $model->tenant_id = auth()->user()->tenant_id;
+            }
+            else {
+                // TODO: find a way to create a tenant from filament in the registration user form
+                $model->tenant_id = Tenant::query()->create([
+                    'name' => $model->name,
+                    'slug' => Str::slug($model->name),
+                ])->id;
+            }
+        });
     }
 }
