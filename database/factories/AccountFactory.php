@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Account;
+use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class AccountFactory extends Factory
@@ -28,6 +29,7 @@ class AccountFactory extends Factory
             'name' => fake()->randomElement($arabicCompanies),
             'iban' => fake()->iban(),
             'balance' => fake()->randomFloat(2, 1000, 100000),
+            'tenant_id' => Tenant::factory()->create()->id
         ];
     }
 }

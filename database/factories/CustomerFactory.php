@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Customer;
+use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class CustomerFactory extends Factory
@@ -25,6 +26,7 @@ class CustomerFactory extends Factory
             'name' => fake()->randomElement($arabicFirstNames) . ' ' . fake()->randomElement($arabicLastNames),
             'phone' => '+966' . fake()->numerify('##########'),
             'email' => fake()->unique()->safeEmail(),
+            'tenant_id' => Tenant::factory()->create()->id
         ];
     }
 }

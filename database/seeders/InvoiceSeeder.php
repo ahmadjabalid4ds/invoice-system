@@ -7,7 +7,6 @@ use App\Models\Customer;
 use Illuminate\Database\Seeder;
 use TomatoPHP\FilamentInvoices\Models\Invoice;
 use TomatoPHP\FilamentInvoices\Models\InvoicesItem;
-use TomatoPHP\FilamentLocations\Models\Location;
 use TomatoPHP\FilamentTypes\Models\Type;
 use App\Models\User;
 
@@ -82,6 +81,7 @@ class InvoiceSeeder extends Seeder
                     'discount' => 0,
                     'total' => 0,
                     'paid' => 0,
+                    'tenant_id' => $account->tenant_id
                 ]);
 
                 // Create invoice items
