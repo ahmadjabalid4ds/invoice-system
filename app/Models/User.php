@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -66,7 +67,10 @@ class User extends Authenticatable
             }
             else {
                 // TODO: find a way to create a tenant from filament in the registration user form
-                $model->tenant_id = Tenant::factory()->create()->id;
+                $model->tenant_id = Tenant::query()->create([
+                    'name' => $model->name,
+                    'slug' => Str::slug($model->name),
+                ])->id;
             }
         });
     }
