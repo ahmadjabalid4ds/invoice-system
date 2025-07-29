@@ -55,6 +55,11 @@ class User extends Authenticatable
         ];
     }
 
+    public function isAdmin()
+    {
+        return (bool)$this->is_admin;
+    }
+
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
