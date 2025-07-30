@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -17,10 +19,22 @@ class TenantFactory extends Factory
      */
     public function definition(): array
     {
-        $name = $this->faker->company();
         return [
-            'name' => $name,
-            'slug' => Str::slug($name),
+            'name' => $this->faker->company(),
+            // 'owner_id' will be filled in after creating
         ];
+    }
+
+    public function configure(): static
+    {
+        return $this->afterCreating(function (Tenant $tenant) {
+            $user = User::factory()->create([
+                'tenant_id' => $tenant->id,
+            ]);
+
+            $tenant->update([
+                'owner_id' => $user->id,
+            ]);
+        });
     }
 }

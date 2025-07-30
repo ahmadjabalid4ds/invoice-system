@@ -3,9 +3,9 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\TenantResource\Pages;
-use App\Filament\Resources\TenantResource\RelationManagers;
 use App\Models\Tenant;
 use Filament\Forms;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -26,9 +26,18 @@ class TenantResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('slug')
-                    ->required()
-                    ->maxLength(255),
+                Select::make('owner_id')
+                    ->label('Owner')
+                    ->relationship(
+                        name: 'owner',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: fn ($query) => $query
+                            ->where('is_admin', false)
+                            ->whereNull('tenant_id')
+                    )
+                    ->searchable()
+                    ->preload()
+                    ->required(),
                 Forms\Components\Toggle::make('is_active')
                     ->required(),
             ]);
