@@ -26,7 +26,7 @@ class Myfatoorah
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->apiKey,
                 'Content-Type' => 'application/json',
-            ])->post($this->baseUrl . 'InitiateSession', [
+            ])->post($this->baseUrl . '/InitiateSession', [
                 'CustomerIdentifier' => uniqid('customer_'),
                 'SaveToken' => false
             ]);
