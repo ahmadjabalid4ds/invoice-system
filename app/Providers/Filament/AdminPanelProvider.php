@@ -28,7 +28,6 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()->font('IBM Plex Sans Arabic')
-            ->registration()->font('IBM Plex Sans Arabic')
             ->colors([
                 'primary' => '#a223fd',
             ])->plugins([

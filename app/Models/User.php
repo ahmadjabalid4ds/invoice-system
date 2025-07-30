@@ -29,6 +29,7 @@ class User extends Authenticatable
         'email',
         'password',
         'tenant_id',
+        'is_admin',
     ];
 
     /**
@@ -54,6 +55,16 @@ class User extends Authenticatable
         ];
     }
 
+    public function isAdmin()
+    {
+        return (bool)$this->is_admin;
+    }
+
+    public function isTenantAdmin()
+    {
+        return $this->tenant->owner_id == $this->id;
+    }
+
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
@@ -64,13 +75,6 @@ class User extends Authenticatable
         static::creating(function ($model) {
             if (auth()->check()) {
                 $model->tenant_id = auth()->user()->tenant_id;
-            }
-            else {
-                // TODO: find a way to create a tenant from filament in the registration user form
-                $model->tenant_id = Tenant::query()->create([
-                    'name' => $model->name,
-                    'slug' => Str::slug($model->name),
-                ])->id;
             }
         });
     }
