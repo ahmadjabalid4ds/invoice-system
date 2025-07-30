@@ -2,7 +2,7 @@
     var sessionId = "{{$session_id}}";
     var countryCode = "{{$country_code}}";
     var currencyCode = "KWD";
-    var amount = "99";
+    var amount = "{{ $invoice->amount ?? '99' }}"; // Use actual invoice amount
 
     var config = {
         sessionId: sessionId,
@@ -11,20 +11,17 @@
         amount: amount,
         callback: payment,
         containerId: "unified-session",
-        paymentOptions: ["ApplePay", "GooglePay", "Card"], //"GooglePay", "ApplePay", "Card"
-        supportedNetworks: ["visa", "masterCard", "mada", "amex"], //"visa", "masterCard", "mada", "amex"
-        language: "ar", //ar en
+        paymentOptions: ["ApplePay", "GooglePay", "Card"],
+        supportedNetworks: ["visa", "masterCard", "mada", "amex"],
+        language: "ar",
         settings: {
             applePay: {
-                //supportedNetworks: "["visa", "masterCard", "mada"]",
-                //containerId: "apple-pay",
-                //callback: paymentAP,
                 style: {
                     frameHeight: "50px",
                     frameWidth: "100%",
                     button: {
                         height: "40px",
-                        type: "pay", //["plain", "buy", "pay", "checkout", "continue", "book", "donate", "subscribe", "reload", "add", "topup", "order", "rent", "support", "contribute", "setup", "tip"]
+                        type: "pay",
                         borderRadius: "0px"
                     }
                 },
@@ -35,15 +32,12 @@
                 requiredBillingContactFields: ["postalAddress", "name", "phone"]
             },
             googlePay: {
-                //supportedNetworks: ["visa", "masterCard"],
-                //containerId: "google-pay",
-                //callback: paymentGP,
                 style: {
                     frameHeight: "50px",
                     frameWidth: "100%",
                     button: {
                         height: "40px",
-                        type: "pay", //Accepted texts ["book", "buy", "checkout", "donate", "order", "pay", "plain", "subscribe"]
+                        type: "pay",
                         borderRadius: "0px",
                         color: "black",
                         language: "en"
@@ -66,7 +60,6 @@
                         borderWidth: "1px",
                         borderRadius: "30px",
                         outerRadius: "10px",
-                        //boxShadow: "0 0 10px 5px purple, 0 0 15px 10px lightblue"
                         placeHolder: {
                             holderName: "اسم حامل البطاقة",
                             cardNumber: "رقم البطاقة",
@@ -99,12 +92,10 @@
                     },
                     error: {
                         borderColor: "red",
-                        //boxShadow: "0 0 10px 5px purple, 0 0 15px 10px lightblue",
                         borderRadius: "8px"
                     },
                     button: {
                         useCustomButton: false,
-                        //onButtonClicked: submit,//You will have to implement this function and call myfatoorah.submitCardPayment()
                         textContent: "ادفع",
                         fontSize: "16px",
                         fontFamily: "Times",
@@ -132,102 +123,112 @@
         }
     };
 
-
+    // Initialize MyFatoorah
     myfatoorah.init(config);
 
     function payment(response) {
-        console.log('dsaddsssssssssssssssssssssssssssssssssss');
-        // Use jQuery to send the invoice token to the backend after payment
-        // Make sure jQuery is loaded in your main page (pay.blade.php)
+        console.log('Payment response received:', response);
 
-            $.ajax({
-                url: '/payment',
-                type: 'POST',
-                data: {
-                    invoice_id: '{{ $invoice?->token }}',
-                    session_id: response.sessionId,
-                    payment_type: response.paymentType,
-                    _token: '{{ csrf_token() }}'
-                },
-                success: function(res) {
-                    // Optionally redirect or show a success message
-                    // window.location.href = '/invoice/' + invoice.token;
-                },
-                error: function(xhr) {
-                    // Optionally show an error message
-                    alert('حدث خطأ أثناء معالجة الدفع. الرجاء المحاولة مرة أخرى.');
+        // Show loading state
+        showLoadingState();
+
+        $.ajax({
+            url: '/payment',
+            type: 'POST',
+            data: {
+                invoice_id: '{{ $invoice->id }}',
+                session_id: response.sessionId,
+                payment_type: response.paymentType,
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(res) {
+                hideLoadingState();
+
+                if (res.success) {
+                    // Show success message
+                    showSuccessMessage(res.message);
+
+                    // Redirect if provided
+                    if (res.redirect_url) {
+                        setTimeout(() => {
+                            window.location.href = res.redirect_url;
+                        }, 2000);
+                    }
+                } else {
+                    showErrorMessage(res.message || 'حدث خطأ أثناء معالجة الدفع');
                 }
-            });
+            },
+            error: function(xhr) {
+                hideLoadingState();
+                console.error('Payment processing error:', xhr);
 
+                let errorMessage = 'حدث خطأ أثناء معالجة الدفع. الرجاء المحاولة مرة أخرى.';
 
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+
+                showErrorMessage(errorMessage);
+            }
+        });
+
+        // Log payment type specific information
         switch (response.paymentType) {
             case "ApplePay":
-                console.log("response >> " + JSON.stringify(response));
+                console.log("Apple Pay payment completed:", response);
                 break;
             case "GooglePay":
-                console.log("response >> " + JSON.stringify(response));
+                console.log("Google Pay payment completed:", response);
                 break;
             case "Card":
-                console.log("response >> " + JSON.stringify(response));
+                console.log("Card payment completed:", response);
                 break;
             default:
-                console.log("Unknown payment type");
+                console.log("Unknown payment type:", response.paymentType);
                 break;
         }
-        // window.location = 'embedded-payment-sample-code-call-ExecutePayment.php?sessionId=' + sessionId;
     }
 
     function sessionCanceled() {
-        console.log("Failed");
+        console.log("Payment session canceled");
+        showErrorMessage('تم إلغاء عملية الدفع');
     }
 
     function sessionStarted() {
-        console.log("Start");
+        console.log("Payment session started");
     }
-
-
-
-    //You need to implement here the handling of the callback for Apple Pay
-    // function paymentAP(response) {
-    //     //Here you need to pass session id to you backend here
-    //     var sessionId = response.sessionId;
-    //     var cardBrandAP = response.card.brand;
-
-    //     console.log("SessionID via AP >> ", sessionId);
-    //     console.log("cardBrand via AP >> ", cardBrandAP);
-    //     console.log("response via AP >> ", response);
-    // }
-
-    //You need to implement here the handling of the callback for Google Pay
-    // function paymentGP(response) {
-    //     //Here you need to pass session id to you backend here
-    //     var sessionId = response.sessionId;
-    //     var cardBrandGP = response.card.brand;
-
-    //     console.log("SessionID via GP >> ", sessionId);
-    //     console.log("cardBrand via GP >> ", cardBrandGP);
-    //     console.log("response via GP >> ", response);
-    // }
-
-    //Here you implement the function of clicking on the payment button using your own function
-    function submit() {
-        console.log("Submit");
-        myfatoorah.submitCardPayment(); //It is mandatory to call this function
-    }
-
-    // //Here you implement the function of clicking on your custom payment button
-    // function customSubmit() {
-    //     console.log("Custom Submit");
-    //     myfatoorah.submitCardPayment(); //It is mandatory to call this function
-    // }
 
     function handleCardBinChanged(response) {
-        console.log(response);
+        console.log('Card BIN changed:', response);
     }
 
-    //Here you specify the actions you need to do when customer clicks on your custom Apple Pay button
+    function submit() {
+        console.log("Manual submit triggered");
+        myfatoorah.submitCardPayment();
+    }
+
     function startApplePay() {
-        console.log("using custom button");
-        myfatoorah.initApplePayPayment(); //It is mandatory to call this function
+        console.log("Custom Apple Pay button clicked");
+        myfatoorah.initApplePayPayment();
+    }
+
+    // Helper functions for UI feedback
+    function showLoadingState() {
+        // Add loading spinner or disable form
+        $('#unified-session').append('<div id="payment-loading" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center; z-index: 9999;"><div>جاري معالجة الدفع...</div></div>');
+    }
+
+    function hideLoadingState() {
+        $('#payment-loading').remove();
+    }
+
+    function showSuccessMessage(message) {
+        // You can customize this based on your UI framework
+        alert('✅ ' + message);
+    }
+
+    function showErrorMessage(message) {
+        // You can customize this based on your UI framework
+        alert('❌ ' + message);
     }
 </script>
