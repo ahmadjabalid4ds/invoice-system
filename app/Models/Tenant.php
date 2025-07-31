@@ -13,7 +13,12 @@ class Tenant extends Model
     protected $fillable = [
         'name',
         'slug',
-        'owner_id'
+        'owner_id',
+        'cr_number',
+        'entity_number',
+        'bank_name',
+        'bank_holder_name',
+        'iban',
     ];
 
     public function owner(): BelongsTo

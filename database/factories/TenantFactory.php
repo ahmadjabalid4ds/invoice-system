@@ -21,7 +21,11 @@ class TenantFactory extends Factory
     {
         return [
             'name' => $this->faker->company(),
-            // 'owner_id' will be filled in after creating
+            'cr_number' => $this->faker->numberBetween(100, 100000),
+            'entity_number' => $this->faker->numberBetween(100, 100000),
+            'bank_name' => $this->faker->name(),
+            'bank_holder_name' => $this->faker->name(),
+            'iban' => $this->faker->iban(),
         ];
     }
 

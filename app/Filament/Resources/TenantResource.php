@@ -26,6 +26,18 @@ class TenantResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
+                Forms\Components\TextInput::make('cr_number')
+                    ->required()
+                    ->numeric(),
+                Forms\Components\TextInput::make('entity_number')
+                    ->required()
+                    ->numeric(),
+                Forms\Components\TextInput::make('bank_name')
+                    ->maxLength(255),
+                Forms\Components\TextInput::make('bank_holder_name')
+                    ->maxLength(255),
+                Forms\Components\TextInput::make('iban')
+                    ->maxLength(255),
                 Select::make('owner_id')
                     ->label('Owner')
                     ->relationship(
@@ -51,6 +63,21 @@ class TenantResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('slug')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('cr_number')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('entity_number')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('bank_name')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('bank_holder_name')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('iban')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('owner.name')
+                    ->numeric()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
