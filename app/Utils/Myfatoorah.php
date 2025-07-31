@@ -27,7 +27,7 @@ class Myfatoorah
                 'Authorization' => 'Bearer ' . $this->apiKey,
                 'Content-Type' => 'application/json',
             ])->post($this->baseUrl . '/InitiateSession', [
-                'CustomerIdentifier' => uniqid('customer_'),
+                'CustomerIdentifier' => 123,
                 'SaveToken' => false
             ]);
 
