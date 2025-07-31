@@ -8,7 +8,9 @@ Route::get('/', function () {
 });
 
 Route::get('invoice/{id}', [InvoiceController::class, 'index'])->name('payment-page');
-Route::post('payment', [InvoiceController::class, 'paymentProcess'])->name('payment');
+Route::post('/payment', [InvoiceController::class, 'paymentProcess'])->name('payment')->withoutMiddleware(['web']);
 Route::get('/payment-success', [InvoiceController::class, 'success'])->name('payment.success');
 Route::get('/payment-failed', [InvoiceController::class, 'failed'])->name('payment.failed');
-Route::match(['GET','POST'],'/payment/callback', [InvoiceController::class, 'callBack']);
+Route::match(['GET','POST'],'/payment/callback', [InvoiceController::class, 'callBack'])
+    ->name('payment.callback')
+    ->withoutMiddleware(['web']);

@@ -24,13 +24,13 @@ class InvoiceController extends Controller
             abort(404, 'Invoice not found');
         }
         try {
-//            $myfatoorah = new Myfatoorah();
-//            $sessionData = $myfatoorah->initiateSession();
-//
-//            $country_code = $sessionData['country_code'];
-//            $session_id = $sessionData['session_id'];
+            $myfatoorah = new Myfatoorah();
+            $sessionData = $myfatoorah->initiateSession();
 
-            return view('pay', compact( 'invoice'));
+            $country_code = $sessionData['country_code'];
+            $session_id = $sessionData['session_id'];
+
+            return view('pay', compact( 'invoice', 'session_id', 'country_code'));
         } catch (\Exception $e) {
             dd($e->getMessage());
             Log::error('Failed to initiate MyFatoorah session: ' . $e->getMessage());
@@ -40,14 +40,6 @@ class InvoiceController extends Controller
 
     public function paymentProcess(Request $request)
     {
-        // Validate the request
-        $request->validate([
-            'InvoiceValue' => 'required|numeric|min:1',
-            'CustomerName' => 'required|string|max:255',
-            'CustomerEmail' => 'required|email',
-            'DisplayCurrencyIso' => 'required|in:EGP,USD,EUR,SAR,KWD,BHD,QAR,AED'
-        ]);
-
         try {
             Log::info('Payment Process Started:', $request->all());
 
@@ -55,7 +47,7 @@ class InvoiceController extends Controller
 
             if ($result['success']) {
                 Log::info('Payment URL Generated Successfully:', $result);
-                return redirect($result['url']);
+                return response()->json(['redirect_url' => $result['url']]);
             } else {
                 Log::error('Payment Process Failed:', $result);
                 return redirect()->route('payment.failed')
@@ -75,17 +67,48 @@ class InvoiceController extends Controller
 
     public function callBack(Request $request)
     {
+        // Log all incoming data for debugging
+        Log::info('=== CALLBACK RECEIVED ===');
+        Log::info('Request Method: ' . $request->method());
+        Log::info('Request URL: ' . $request->fullUrl());
+        Log::info('Request Headers: ', $request->headers->all());
+        Log::info('Request Body: ', $request->all());
+        Log::info('Raw Input: ' . $request->getContent());
+
         try {
-            Log::info('Payment Callback Received:', $request->all());
+            // Check if this is a GET request with paymentId parameter
+            $paymentId = $request->input('paymentId') ?? $request->input('Id');
+
+            if (!$paymentId) {
+                Log::error('No paymentId found in callback request');
+                // Return a response that MyFatoorah expects
+                return response()->json(['status' => 'error', 'message' => 'No payment ID provided'], 400);
+            }
+
+            Log::info('Processing payment callback for ID: ' . $paymentId);
 
             $isPaymentSuccessful = $this->paymentGateway->callBack($request);
 
             if ($isPaymentSuccessful) {
                 Log::info('Payment Callback: Payment Successful');
+
+                // For webhook callbacks, return JSON response
+                if ($request->expectsJson() || $request->isMethod('POST')) {
+                    return response()->json(['status' => 'success', 'message' => 'Payment verified']);
+                }
+
+                // For browser redirects, redirect to success page
                 return redirect()->route('payment.success')
                     ->with('success', 'Payment completed successfully');
             } else {
                 Log::info('Payment Callback: Payment Failed or Pending');
+
+                // For webhook callbacks, return JSON response
+                if ($request->expectsJson() || $request->isMethod('POST')) {
+                    return response()->json(['status' => 'failed', 'message' => 'Payment not verified'], 400);
+                }
+
+                // For browser redirects, redirect to failed page
                 return redirect()->route('payment.failed')
                     ->with('error', 'Payment was not successful');
             }
@@ -96,6 +119,11 @@ class InvoiceController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
 
+            // Always return a proper response to MyFatoorah
+            if ($request->expectsJson() || $request->isMethod('POST')) {
+                return response()->json(['status' => 'error', 'message' => 'Internal server error'], 500);
+            }
+
             return redirect()->route('payment.failed')
                 ->with('error', 'An error occurred while processing payment callback');
         }
@@ -103,12 +131,10 @@ class InvoiceController extends Controller
 
     public function success()
     {
-
         return response()->json('success');
     }
-    public function failed()
+    public function failed(Request $request)
     {
-
         return response()->json('failed');
     }
 }
