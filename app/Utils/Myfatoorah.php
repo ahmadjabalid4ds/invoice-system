@@ -26,11 +26,11 @@ class Myfatoorah
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->apiKey,
                 'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
             ])->post($this->baseUrl . '/InitiateSession', [
                 'CustomerIdentifier' => 123,
                 'SaveToken' => false
             ]);
-
             if (!$response->successful()) {
                 Log::error('MyFatoorah InitiateSession failed', [
                     'response' => $response->body(),
@@ -47,7 +47,7 @@ class Myfatoorah
                     'session_id' => $data['Data']['SessionId']
                 ];
             } else {
-                Log::error('MyFatoorah session initiation failed', $data);
+                // Log::error('MyFatoorah session initiation failed', $data);
                 throw new \Exception('MyFatoorah session initiation failed: ' . ($data['Message'] ?? 'Unknown error'));
             }
         } catch (\Exception $e) {
