@@ -136,7 +136,7 @@
     myfatoorah.init(config);
 
     function payment(response) {
-        console.log('dsaddsssssssssssssssssssssssssssssssssss');
+
         // Use jQuery to send the invoice token to the backend after payment
         // Make sure jQuery is loaded in your main page (pay.blade.php)
 
@@ -152,8 +152,10 @@
                 _token: '{{ csrf_token() }}'
             },
             success: function(res) {
-                // Optionally redirect or show a success message
-                // window.location.href = '/invoice/' + invoice.token;
+              console.log('res',res);
+              if (res.redirect_url) {
+                window.location.href = res.redirect_url; // Redirects the browser
+                }
             },
             error: function(xhr) {
                 console.error('❌ AJAX Error:', xhr.status, xhr.responseText);
