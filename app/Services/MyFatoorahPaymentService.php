@@ -40,7 +40,7 @@ class MyFatoorahPaymentService extends BasePaymentService implements PaymentGate
             // Log the request data for debugging
             Log::info('MyFatoorah SendPayment Request:', $data);
 
-            $response = $this->buildRequest('POST', '/v2/SendPayment', $data);
+            $response = $this->buildRequest('POST', '/SendPayment', $data);
 
             // Log the response for debugging
             Log::info('MyFatoorah SendPayment Response:', $response->getData(true));
