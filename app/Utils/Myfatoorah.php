@@ -1,29 +1,156 @@
 <?php
 
 namespace App\Utils;
-use Symfony\Component\HttpFoundation\Response;
+
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
-class Myfatoorah {
-    protected $env = "test";
-    protected $base_url = "https://apitest.myfatoorah.com/v2/";
-    protected $api_key = "rLtt6JWvbUHDDhsZnfpAhpYk4dxYDQkbcPTyGaKp2TYqQgG7FGZ5Th_WD53Oq8Ebz6A53njUoo1w3pjU1D4vs_ZMqFiz_j0urb_BH9Oq9VZoKFoJEDAbRZepGcQanImyYrry7Kt6MnMdgfG5jn4HngWoRdKduNNyP4kzcp3mRv7x00ahkm9LAK7ZRieg7k1PDAnBIOG3EyVSJ5kK4WLMvYr7sCwHbHcu4A5WwelxYK0GMJy37bNAarSJDFQsJ2ZvJjvMDmfWwDVFEVe_5tOomfVNt6bOg9mexbGjMrnHBnKnZR1vQbBtQieDlQepzTZMuQrSuKn-t5XZM7V6fCW7oP-uXGX-sMOajeX65JOf6XVpk29DP6ro8WTAflCDANC193yof8-f5_EYY-3hXhJj7RBXmizDpneEQDSaSz5sFk0sV5qPcARJ9zGG73vuGFyenjPPmtDtXtpx35A-BVcOSBYVIWe9kndG3nclfefjKEuZ3m4jL9Gg1h2JBvmXSMYiZtp9MR5I6pvbvylU_PP5xJFSjVTIz7IQSjcVGO41npnwIxRXNRxFOdIUHn0tjQ-7LwvEcTXyPsHXcMD8WtgBh-wxR8aKX7WPSsT1O8d8reb2aR7K3rkV3K82K_0OgawImEpwSvp9MNKynEAJQS6ZHe_J_l77652xwPNxMRTMASk1ZsJL";
-    public function initiateSession(){
-        $response = Http::withBody(json_encode([
-            "CustomerIdentifier"=> "123"
-            ,'SaveToken'=>false
-        ]))->withToken(
-           $this->api_key
-        )->post($this->base_url . 'InitiateSession') ;
-       $data = $response->json();
-       if ($data != null && $data['IsSuccess']) {
-            return [
-                 'country_code' => $data['Data']['CountryCode'],
-                'session_id' => $data['Data']['SessionId']
-            ];
+class Myfatoorah
+{
+    private $apiKey;
+    private $baseUrl;
 
-       }else {
-        abort(500);
-       }
+    public function __construct()
+    {
+        $this->apiKey = config('services.my_fatoorah.api_key');
+        $this->baseUrl = config('services.my_fatoorah.base_url');
+
+        if (!$this->apiKey || !$this->baseUrl) {
+            throw new \Exception('MyFatoorah API credentials not configured');
+        }
+    }
+
+    public function initiateSession()
+    {
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => 'application/json',
+            ])->post($this->baseUrl . '/InitiateSession', [
+                'CustomerIdentifier' => uniqid('customer_'),
+                'SaveToken' => false
+            ]);
+
+            if (!$response->successful()) {
+                Log::error('MyFatoorah InitiateSession failed', [
+                    'response' => $response->body(),
+                    'status' => $response->status()
+                ]);
+                throw new \Exception('Failed to initiate session with MyFatoorah');
+            }
+
+            $data = $response->json();
+
+            if ($data && $data['IsSuccess']) {
+                return [
+                    'country_code' => $data['Data']['CountryCode'],
+                    'session_id' => $data['Data']['SessionId']
+                ];
+            } else {
+                Log::error('MyFatoorah session initiation failed', $data);
+                throw new \Exception('MyFatoorah session initiation failed: ' . ($data['Message'] ?? 'Unknown error'));
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception in initiateSession: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function getPaymentStatus(string $paymentId)
+    {
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => 'application/json',
+            ])->post($this->baseUrl . 'GetPaymentStatus', [
+                'KeyType' => 'PaymentId',
+                'Key' => $paymentId,
+            ]);
+
+            if (!$response->successful()) {
+                Log::error('MyFatoorah GetPaymentStatus failed', [
+                    'response' => $response->body(),
+                    'status' => $response->status()
+                ]);
+                throw new \Exception('Failed to get payment status from MyFatoorah');
+            }
+
+            $data = $response->json();
+
+            if ($data && $data['IsSuccess']) {
+                return $data['Data'];
+            } else {
+                Log::error('MyFatoorah payment status check failed', $data);
+                throw new \Exception('Payment status check failed: ' . ($data['Message'] ?? 'Unknown error'));
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception in getPaymentStatus: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function getPaymentStatusBySessionId(string $sessionId)
+    {
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => 'application/json',
+            ])->post($this->baseUrl . 'GetPaymentStatus', [
+                'KeyType' => 'InvoiceId',
+                'Key' => $sessionId,
+            ]);
+
+            if (!$response->successful()) {
+                logger()->info('responseeeeee:'. $response);
+                Log::error('MyFatoorah GetPaymentStatus by SessionId failed', [
+                    'response' => $response->body(),
+                    'status' => $response->status(),
+                    'session_id' => $sessionId
+                ]);
+                throw new \Exception('Failed to get payment status by session ID from MyFatoorah');
+            }
+
+            $data = $response->json();
+
+            if ($data && $data['IsSuccess']) {
+                return $data['Data'];
+            } else {
+                Log::error('MyFatoorah payment status check by session ID failed', $data);
+                throw new \Exception('Payment status check failed: ' . ($data['Message'] ?? 'Unknown error'));
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception in getPaymentStatusBySessionId: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function executePayment(array $paymentData)
+    {
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => 'application/json',
+            ])->post($this->baseUrl . 'ExecutePayment', $paymentData);
+
+            if (!$response->successful()) {
+                Log::error('MyFatoorah ExecutePayment failed', [
+                    'response' => $response->body(),
+                    'status' => $response->status()
+                ]);
+                throw new \Exception('Failed to execute payment with MyFatoorah');
+            }
+
+            $data = $response->json();
+
+            if ($data && $data['IsSuccess']) {
+                return $data['Data'];
+            } else {
+                Log::error('MyFatoorah payment execution failed', $data);
+                throw new \Exception('Payment execution failed: ' . ($data['Message'] ?? 'Unknown error'));
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception in executePayment: ' . $e->getMessage());
+            throw $e;
+        }
     }
 }
