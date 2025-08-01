@@ -33,7 +33,7 @@ class MyFatoorahPaymentService extends BasePaymentService implements PaymentGate
                 'DisplayCurrencyIso' => $request->input('DisplayCurrencyIso', 'KWD'),
                 'Language' => 'en',
                 'CallBackUrl' => $request->getSchemeAndHttpHost() . '/payment/callback',
-                'ErrorUrl' => $request->getSchemeAndHttpHost() . '/payment-failed',
+//                'ErrorUrl' => $request->getSchemeAndHttpHost() . '/payment-failed',
                 'MobileCountryCode' => '+965',
                 'SessionId' => $request->input('session_id'),
             ];
@@ -48,7 +48,7 @@ class MyFatoorahPaymentService extends BasePaymentService implements PaymentGate
                     'success' => true,
                     'url' => $responseData['data']['Data']['PaymentURL'],
                     'invoice_id' => $responseData['data']['Data']['InvoiceId'] ?? null,
-                    'payment_id' => $responseData['data']['Data']['PaymentURL'] ?? null
+                    'payment_id' => $this->extractPaymentId($responseData['data']['Data']['PaymentURL'])
                 ];
             }
             Log::error('MyFatoorah Payment Creation Failed', $responseData);
@@ -85,7 +85,7 @@ class MyFatoorahPaymentService extends BasePaymentService implements PaymentGate
                 'Key' => $paymentId,
             ];
             Log::info('MyFatoorah GetPaymentStatus Request', $data);
-            $response = $this->buildRequest('POST', '/v2/getPaymentStatus', $data);
+            $response = $this->buildRequest('POST', '/getPaymentStatus', $data);
             $responseData = $response->getData(true);
             Log::info('MyFatoorah GetPaymentStatus Response', $responseData);
             // Store callback data for debugging
@@ -112,5 +112,16 @@ class MyFatoorahPaymentService extends BasePaymentService implements PaymentGate
             ]);
             return false;
         }
+    }
+
+    private function extractPaymentId(string $url): ?string
+    {
+        $parsedUrl = parse_url($url);
+        if (!isset($parsedUrl['query'])) {
+            return null;
+        }
+
+        parse_str($parsedUrl['query'], $queryParams);
+        return $queryParams['paymentId'] ?? null;
     }
 }
