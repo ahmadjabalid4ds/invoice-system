@@ -147,7 +147,7 @@
                 invoice_id: '{{ $invoice->id }}',
                 session_id: response.sessionId,
                 InvoiceValue: '{{ $invoice->total }}',
-                CustomerName: 'Test For Now',
+                CustomerName: 'test test',
                 payment_type: response.paymentType,
                 _token: '{{ csrf_token() }}'
             },

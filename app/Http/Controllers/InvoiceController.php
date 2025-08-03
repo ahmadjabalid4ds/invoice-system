@@ -40,28 +40,30 @@ class InvoiceController extends Controller
     public function paymentProcess(Request $request)
     {
         Log::info('Payment Process Started', $request->all());
-        $result = $this->paymentGateway->sendPayment($request);
 
         try {
-
+            $result = $this->paymentGateway->sendPayment($request);
 
             if ($result['success']) {
                 Log::info('Payment URL Generated Successfully', $result);
-                Log::info('Payment ID: ' . $result['payment_id']);
                 return response()->json(['redirect_url' => $result['url']]);
             } else {
                 Log::error('Payment Process Failed', $result);
-                return redirect()->route('payment.failed')
-                    ->with('error', $result['error'] ?? 'Payment initialization failed');
+                return response()->json([
+                    'success' => false,
+                    'error' => $result['error'] ?? 'Payment initialization failed'
+                ], 400);
             }
-
         } catch (\Exception $e) {
             Log::error('Payment Process Exception', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            return redirect()->route('payment.failed')
-                ->with('error', 'An error occurred while processing payment');
+
+            return response()->json([
+                'success' => false,
+                'error' => 'An error occurred while processing payment'
+            ], 500);
         }
     }
 
@@ -70,55 +72,45 @@ class InvoiceController extends Controller
         Log::info('=== CALLBACK RECEIVED ===');
         Log::info('Request Method: ' . $request->method());
         Log::info('Request URL: ' . $request->fullUrl());
-        Log::info('Request Headers', $request->headers->all());
-        Log::info('Request Body', $request->all());
-        Log::info('Raw Input: ' . $request->getContent());
+        Log::info('Request Data', $request->all());
+
         try {
-            // Check if this is a GET request with paymentId parameter
             $paymentId = $request->input('paymentId') ?? $request->input('Id');
 
             if (!$paymentId) {
                 Log::error('No paymentId found in callback request');
-                // Return a response that MyFatoorah expects
                 return response()->json(['status' => 'error', 'message' => 'No payment ID provided'], 400);
             }
-            Log::info('Processing payment callback for ID: ' . $paymentId);
 
+            Log::info('Processing payment callback for ID: ' . $paymentId);
 
             $isPaymentSuccessful = $this->paymentGateway->callBack($request);
 
             if ($isPaymentSuccessful) {
                 Log::info('Payment Callback: Payment Successful');
 
-
-                // For webhook callbacks, return JSON response
                 if ($request->expectsJson() || $request->isMethod('POST')) {
                     return response()->json(['status' => 'success', 'message' => 'Payment verified']);
                 }
 
-                // For browser redirects, redirect to success page
                 return redirect()->route('payment.success')
                     ->with('success', 'Payment completed successfully');
             } else {
                 Log::info('Payment Callback: Payment Failed or Pending');
 
-
-                // For webhook callbacks, return JSON response
                 if ($request->expectsJson() || $request->isMethod('POST')) {
                     return response()->json(['status' => 'failed', 'message' => 'Payment not verified'], 400);
                 }
 
-                // For browser redirects, redirect to failed page
                 return redirect()->route('payment.failed')
                     ->with('error', 'Payment was not successful');
             }
-
         } catch (\Exception $e) {
             Log::error('Payment Callback Exception', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            // Always return a proper response to MyFatoorah
+
             if ($request->expectsJson() || $request->isMethod('POST')) {
                 return response()->json(['status' => 'error', 'message' => 'Internal server error'], 500);
             }
@@ -128,12 +120,20 @@ class InvoiceController extends Controller
         }
     }
 
-    public function success()
+    public function success(Request $request)
     {
-        return response()->json('success');
+        $invoice_id = $request->get('invoice');
+        $invoice = null;
+
+        if ($invoice_id) {
+            $invoice = Invoice::find($invoice_id);
+        }
+
+        return view('payment.success', compact('invoice'));
     }
+
     public function failed(Request $request)
     {
-        return response()->json('failed');
+        return view('payment.failed');
     }
 }
