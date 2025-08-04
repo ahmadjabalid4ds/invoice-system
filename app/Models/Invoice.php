@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentStatusEnum;
 use App\Models\Scopes\TenantScope;
 use TomatoPHP\FilamentInvoices\Models\Invoice as BaseInvoice;
-use App\Models\Payment; // or wherever your related model is
 
 class Invoice extends BaseInvoice
 {
@@ -65,5 +65,93 @@ class Invoice extends BaseInvoice
         });
     }
 
-    // You can still override other things here too
+    public function canBePaid(): bool
+    {
+        return !in_array($this->status, [PaymentStatusEnum::PAID, PaymentStatusEnum::PROCESSING, PaymentStatusEnum::PENDING]);
+    }
+
+
+    public function isPaid(): bool
+    {
+        return $this->status == PaymentStatusEnum::PAID;
+    }
+
+    public function isProcessing(): bool
+    {
+        return $this->status == PaymentStatusEnum::PROCESSING;
+    }
+
+    public function markAsProcessing(string $paymentId = null): bool
+    {
+        if (!$this->canBePaid()) {
+            return false;
+        }
+
+        return $this->update([
+            'status' => PaymentStatusEnum::PROCESSING,
+            'updated_at' => now()
+        ]);
+    }
+
+    public function markAsPaid(array $paymentData = []): bool
+    {
+        if ($this->isPaid()) {
+            return false;
+        }
+
+        $updateData = [
+            'status' => PaymentStatusEnum::PAID,
+            'updated_at' => now()
+        ];
+
+        if (!empty($paymentData['bank_account'])) {
+            $updateData['bank_account'] = $paymentData['bank_account'];
+        }
+        if (!empty($paymentData['bank_account_owner'])) {
+            $updateData['bank_account_owner'] = $paymentData['bank_account_owner'];
+        }
+        if (!empty($paymentData['bank_iban'])) {
+            $updateData['bank_iban'] = $paymentData['bank_iban'];
+        }
+        if (!empty($paymentData['bank_swift'])) {
+            $updateData['bank_swift'] = $paymentData['bank_swift'];
+        }
+        if (!empty($paymentData['bank_address'])) {
+            $updateData['bank_address'] = $paymentData['bank_address'];
+        }
+        if (!empty($paymentData['bank_branch'])) {
+            $updateData['bank_branch'] = $paymentData['bank_branch'];
+        }
+        if (!empty($paymentData['bank_name'])) {
+            $updateData['bank_name'] = $paymentData['bank_name'];
+        }
+        if (!empty($paymentData['bank_city'])) {
+            $updateData['bank_city'] = $paymentData['bank_city'];
+        }
+        if (!empty($paymentData['bank_country'])) {
+            $updateData['bank_country'] = $paymentData['bank_country'];
+        }
+
+        return $this->update($updateData);
+    }
+
+    public function markAsFailed(): bool
+    {
+        $updateData = [
+            'status' => PaymentStatusEnum::FAILED,
+            'updated_at' => now()
+        ];
+
+        return $this->update($updateData);
+    }
+
+    public function scopePaid($query)
+    {
+        return $query->where('status', PaymentStatusEnum::PAID);
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('status', PaymentStatusEnum::PENDING);
+    }
 }
