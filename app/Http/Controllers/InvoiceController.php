@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PaymentStatusEnum;
 use App\Interfaces\PaymentGatewayInterface;
 use App\Utils\Myfatoorah;
 use Illuminate\Http\Request;
@@ -20,7 +21,7 @@ class InvoiceController extends Controller
     public function index($id)
     {
         $invoice = Invoice::find($id);
-        if (!$invoice) {
+        if (!$invoice || !$invoice->canBePaid()) {
             abort(404, 'Invoice not found');
         }
         try {

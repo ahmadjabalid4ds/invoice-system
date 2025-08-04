@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\InvoicePaidEvent;
 use App\Interfaces\PaymentGatewayInterface;
 use App\Models\Invoice;
 use Illuminate\Http\Request;
@@ -186,6 +187,7 @@ class MyFatoorahPaymentService extends BasePaymentService implements PaymentGate
                 Log::info('MyFatoorah Payment Confirmed as Paid');
 
                 $this->updateInvoiceFromCallback($responseData['data']['Data'], $request->input('invoice_id'));
+                InvoicePaidEvent::dispatch($request->input('invoice_id'));
 
                 return true;
             }

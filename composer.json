@@ -15,6 +15,7 @@
         "laravel/tinker": "^2.10.1",
         "opcodesio/log-viewer": "^3.18",
         "oriondevelops/filament-greeter": "^0.2.2",
+        "salla/zatca": "^3.0",
         "spatie/laravel-medialibrary": "^11.12",
         "spatie/laravel-translatable": "^6.11",
         "tomatophp/filament-icons": "^1.1",

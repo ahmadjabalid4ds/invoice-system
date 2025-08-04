@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\PaymentStatusEnum;
 use App\Models\Scopes\TenantScope;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use TomatoPHP\FilamentInvoices\Models\Invoice as BaseInvoice;
 
 class Invoice extends BaseInvoice
@@ -46,12 +47,18 @@ class Invoice extends BaseInvoice
         'notes',
         'created_at',
         'updated_at',
-        'token'
+        'token',
+        'zatca_qr'
     ];
 
     public function payments()
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
     }
 
     protected static function booted(): void
@@ -67,18 +74,18 @@ class Invoice extends BaseInvoice
 
     public function canBePaid(): bool
     {
-        return !in_array($this->status, [PaymentStatusEnum::PAID, PaymentStatusEnum::PROCESSING, PaymentStatusEnum::PENDING]);
+        return !in_array($this->status, [PaymentStatusEnum::PAID->value, PaymentStatusEnum::PROCESSING->value, PaymentStatusEnum::PENDING->value]);
     }
 
 
     public function isPaid(): bool
     {
-        return $this->status == PaymentStatusEnum::PAID;
+        return $this->status == PaymentStatusEnum::PAID->value;
     }
 
     public function isProcessing(): bool
     {
-        return $this->status == PaymentStatusEnum::PROCESSING;
+        return $this->status == PaymentStatusEnum::PROCESSING->value;
     }
 
     public function markAsProcessing(string $paymentId = null): bool
@@ -88,7 +95,7 @@ class Invoice extends BaseInvoice
         }
 
         return $this->update([
-            'status' => PaymentStatusEnum::PROCESSING,
+            'status' => PaymentStatusEnum::PROCESSING->value,
             'updated_at' => now()
         ]);
     }
@@ -100,7 +107,7 @@ class Invoice extends BaseInvoice
         }
 
         $updateData = [
-            'status' => PaymentStatusEnum::PAID,
+            'status' => PaymentStatusEnum::PAID->value,
             'updated_at' => now()
         ];
 
@@ -138,7 +145,7 @@ class Invoice extends BaseInvoice
     public function markAsFailed(): bool
     {
         $updateData = [
-            'status' => PaymentStatusEnum::FAILED,
+            'status' => PaymentStatusEnum::FAILED->value,
             'updated_at' => now()
         ];
 
@@ -147,11 +154,11 @@ class Invoice extends BaseInvoice
 
     public function scopePaid($query)
     {
-        return $query->where('status', PaymentStatusEnum::PAID);
+        return $query->where('status', PaymentStatusEnum::PAID->value);
     }
 
     public function scopePending($query)
     {
-        return $query->where('status', PaymentStatusEnum::PENDING);
+        return $query->where('status', PaymentStatusEnum::PENDING->value);
     }
 }
