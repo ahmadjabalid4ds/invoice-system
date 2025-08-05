@@ -10,11 +10,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasRoles;
+    use HasRoles, HasApiTokens;
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, \TomatoPHP\FilamentLanguageSwitcher\Traits\InteractsWithLanguages;
 
@@ -30,6 +31,7 @@ class User extends Authenticatable
         'password',
         'tenant_id',
         'is_admin',
+        'phone',
     ];
 
     /**

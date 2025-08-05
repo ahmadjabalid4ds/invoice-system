@@ -48,7 +48,8 @@ class Invoice extends BaseInvoice
         'created_at',
         'updated_at',
         'token',
-        'zatca_qr'
+        'zatca_qr',
+        'channel',
     ];
 
     public function payments()

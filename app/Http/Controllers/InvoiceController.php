@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\PaymentStatusEnum;
 use App\Interfaces\PaymentGatewayInterface;
 use App\Utils\Myfatoorah;
 use Illuminate\Http\Request;
@@ -11,7 +10,6 @@ use Illuminate\Support\Facades\Log;
 
 class InvoiceController extends Controller
 {
-
     protected PaymentGatewayInterface $paymentGateway;
 
     public function __construct(PaymentGatewayInterface $paymentGateway)
