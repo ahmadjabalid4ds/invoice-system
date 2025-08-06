@@ -26,7 +26,7 @@ return new class extends Migration
 
 
         Schema::table('invoices', function (Blueprint $table) {
-            $table->foreignIdFor(Tenant::class)->after('id')->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Tenant::class)->after('id')->nullable()->constrained()->cascadeOnDelete();
         });
 
         Schema::table('companies', function (Blueprint $table) {

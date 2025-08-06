@@ -23,7 +23,7 @@ return new class extends Migration
             $table->morphs('from');
 
             //Link
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->unsignedBigInteger('branch_id')->nullable();
             $table->foreignId('category_id')->nullable()->constrained('types')->onDelete('cascade');
 
@@ -34,7 +34,7 @@ return new class extends Migration
             $table->string('type')->default('push')->nullable();
 
             //Status
-            $table->string('status')->default('pending')->nullable();
+            $table->string('status')->default('draft')->nullable();
 
             //Amounts
             $table->double('total')->default(0);
