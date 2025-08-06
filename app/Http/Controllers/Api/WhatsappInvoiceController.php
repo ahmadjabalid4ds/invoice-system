@@ -38,7 +38,7 @@ class WhatsappInvoiceController extends BaseApiController
 
     public function index(): JsonResponse
     {
-        $invoices = Invoice::query()->where('user_id', auth()->user()->id)->get();
+        $invoices = Invoice::query()->where('user_id', auth()->user()?->id)->get();
         return $this->successResponse($invoices, 'Invoices Retrieved Successfully', 201);
     }
 }
