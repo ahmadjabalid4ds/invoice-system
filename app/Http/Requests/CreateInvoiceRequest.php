@@ -45,15 +45,6 @@ class CreateInvoiceRequest extends FormRequest
             'send_email'           => ['nullable', 'boolean'],
             'currency_id'          => ['nullable', 'exists:currencies,id'],
             'is_bank_transfer'     => ['nullable', 'boolean'],
-            'bank_account'         => ['nullable', 'string', 'max:255'],
-            'bank_account_owner'   => ['nullable', 'string', 'max:255'],
-            'bank_iban'            => ['nullable', 'string', 'max:255'],
-            'bank_swift'           => ['nullable', 'string', 'max:255'],
-            'bank_address'         => ['nullable', 'string', 'max:255'],
-            'bank_branch'          => ['nullable', 'string', 'max:255'],
-            'bank_name'            => ['nullable', 'string', 'max:255'],
-            'bank_city'            => ['nullable', 'string', 'max:255'],
-            'bank_country'         => ['nullable', 'string', 'max:255'],
             'notes'                => ['nullable', 'string'],
             'channel'                => ['nullable', 'string'],
         ];
@@ -62,8 +53,19 @@ class CreateInvoiceRequest extends FormRequest
     public function validated($key = null, $default = null)
     {
         $data = parent::validated($key, $default);
+        $user = auth()->user();
         $data['uuid'] = (string) Str::uuid();
-        $data['user_id'] = auth()->user()->id;
+        $data['for_type'] = "App\Models" . "\\". $data['for_type'];
+        $data['from_type'] = "App\Models" . "\\". $data['from_type'];
+        if ($user && $user->tenant_id){
+            $user->load('tenant');
+            $data['user_id'] = auth()->user()->id;
+            $data['tenant_id'] = auth()->user()->tenant->id;
+            $data['bank_account'] = auth()->user()->tenant->bank_name;
+            $data['bank_account_owner'] = auth()->user()->tenant->bank_holder_name;
+            $data['bank_name'] = auth()->user()->tenant->bank_name;
+            $data['bank_iban'] = auth()->user()->tenant->iban;
+        }
 
         return $data;
     }

@@ -3,8 +3,8 @@
         <x-filament::section >
             <div>
                 @php
-                $symbol =$this->getRecord()->currency?->iso == 'SAR' ? 'sar' : $this->getRecord()->currency?->iso
-                    @endphp
+                    $symbol =$this->getRecord()->currency?->iso == 'SAR' ? 'sar' : $this->getRecord()->currency?->iso
+                @endphp
                 <div class="flex justify-between xl:gap-60 lg:gap-48 md:gap-16 sm:gap-8 sm:flex-row flex-col gap-4">
                     <div class="w-full">
                         <div>
@@ -93,6 +93,16 @@
                                         <div>{{type_of($this->getRecord()->type, 'invoices', 'type')->name}}</div>
                                     </div>
                                 </div>
+
+                                {{-- ZATCA QR Code Section --}}
+                                @if($this->getRecord()->zatca_qr)
+                                    <div class="mt-4 flex justify-end">
+                                        <div class="flex flex-col items-center">
+                                            <div class="text-sm text-gray-400 mb-2">ZATCA QR Code</div>
+                                            <div id="zatca-qr-{{ $this->getRecord()->id }}" class="bg-white p-2 rounded border"></div>
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -288,7 +298,7 @@
                             <div class="text-sm text-gray-400">
                                 {!! $this->getRecord()->notes !!}
                             </div>
-                        </div`>
+                        </div>
                     @endif
                 </div>
             </div>
@@ -323,6 +333,33 @@
         </div>
     </x-filament-panels::page>
 
+    {{-- QR Code Generation Script --}}
+    @if($this->getRecord()->zatca_qr)
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Generate QR code for ZATCA
+                const zatcaQrData = "{{ $this->getRecord()->zatca_qr }}";
+                const qrContainer = document.getElementById('zatca-qr-{{ $this->getRecord()->id }}');
+
+                if (zatcaQrData && qrContainer) {
+                    const qr = qrcode(0, 'M');
+                    qr.addData(zatcaQrData);
+                    qr.make();
+
+                    qrContainer.innerHTML = qr.createTableTag(3, 3);
+
+                    // Style the QR code table
+                    const qrTable = qrContainer.querySelector('table');
+                    if (qrTable) {
+                        qrTable.style.border = 'none';
+                        qrTable.style.borderCollapse = 'collapse';
+                        qrTable.style.margin = '0';
+                    }
+                }
+            });
+        </script>
+    @endif
 
     <style type="text/css" media="print">
         .fi-section-content-ctn {
@@ -348,6 +385,12 @@
         .fi-topbar { display: none; !important; }
         .fi-sidebar { display: none; !important; }
         .fi-sidebar-close-overlay { display: none; !important; }
+
+        #zatca-qr-{{ $this->getRecord()->id ?? 'default' }} table {
+            -webkit-print-color-adjust: exact !important;
+            color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
     </style>
 
 </div>
