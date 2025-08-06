@@ -47,6 +47,7 @@ class CreateInvoiceRequest extends FormRequest
             'is_bank_transfer'     => ['nullable', 'boolean'],
             'notes'                => ['nullable', 'string'],
             'channel'                => ['nullable', 'string'],
+            'qty'                => ['nullable', 'string'],
         ];
     }
 

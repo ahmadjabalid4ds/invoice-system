@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\PaymentStatusEnum;
 use App\Models\Scopes\TenantScope;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 use TomatoPHP\FilamentInvoices\Models\Invoice as BaseInvoice;
 
 class Invoice extends BaseInvoice
@@ -68,7 +69,11 @@ class Invoice extends BaseInvoice
 
         static::creating(function ($model) {
             if (auth()->check()) {
-                $model->tenant_id = auth()->user()->tenant_id;
+                $model->tenant_id = auth()->user()?->tenant_id;
+                $model->currency_id = DB::table('currencies')->where('iso', "SAR")->first()->id;
+                $model->from_type = "App\Models\Tenant";
+                $model->for_type = "App\Models\Tenant";
+                $model->vat = config('services.invoice.vat_percentage');
             }
         });
     }

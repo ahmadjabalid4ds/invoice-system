@@ -38,6 +38,10 @@ return [
     'my_fatoorah' => [
         'base_url' => env('MY_FATOORAH_BASE_URL'),
         'api_key' => env('MY_FATOORAH_API_KEY'),
-    ]
+    ],
+
+    'invoice' => [
+        'vat_percentage' => env('INVOICE_VAT_PERCENTAGE')
+    ],
 
 ];
