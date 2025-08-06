@@ -16,10 +16,12 @@ Route::prefix('v1')->group(function () {
 
         Route::middleware(['auth:sanctum', 'throttle:30,1'])->group(function () {
             Route::post('/logout', [AuthController::class, 'logout']);
-            Route::get('/index', [WhatsappInvoiceController::class, 'index']);
         });
-        Route::post('/storeInvoice', [WhatsappInvoiceController::class, 'store']);
-        Route::post('/validateWhatsapp', [WhatsappInvoiceController::class, 'validateWhatsapp']);
     });
 
+    Route::prefix('invoice')->group(function () {
+        Route::get('index', [WhatsappInvoiceController::class, 'index']);
+        Route::post('storeInvoice', [WhatsappInvoiceController::class, 'store']);
+        Route::post('validateWhatsapp', [WhatsappInvoiceController::class, 'validateWhatsapp']);
+    });
 });
