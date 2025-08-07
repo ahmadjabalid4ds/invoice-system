@@ -13,44 +13,54 @@ class WhatsappValidationMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param Closure(Request): (Response) $next
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Get phone number from request
-        $phone = $request->input('phone');
+        $data = json_decode($request->getContent(), true);
 
-        // Check if phone number is provided
-        if (empty($phone)) {
-            return $this->errorResponse('Phone number is required', 400);
+        $waPhone = $request->input('wa_number') ?? ($data['wa_number'] ?? null);
+        $toWaPhone = $request->input('to_wa_number') ?? ($data['to_wa_number'] ?? null);
+
+        // --- Validate wa_number ---
+        if (empty($waPhone)) {
+            return $this->errorResponse('Phone number (wa_number) is required', 400);
         }
 
-        // Validate phone number format
-        if (!$this->isValidPhoneFormat($phone)) {
-            return $this->errorResponse('Invalid phone number format. Please provide a valid international phone number (e.g., +966501234567)', 422);
+        if (!$this->isValidPhoneFormat($waPhone)) {
+            return $this->errorResponse('Invalid phone number format (wa_number). Please provide a valid international phone number (e.g., +966501234567)', 422);
         }
 
-        // Normalize phone number for database lookup
-        $normalizedPhone = $this->normalizePhoneNumber($phone);
+        $normalizedWaPhone = $this->normalizePhoneNumber($waPhone);
 
-        // Check if user exists with this phone number
-        $user = User::where('phone', $normalizedPhone)
-            ->orWhere('phone', $phone)
-            ->orWhere('phone', ltrim($phone, '+'))
-            ->first();
+        $user = User::where('phone', $normalizedWaPhone)->first();
 
         if (!$user) {
-            return $this->errorResponse('No user found with this phone number', 404);
+            return $this->errorResponse('No user found with this phone number (wa_number)', 404);
         }
 
-        // Check if user is active (optional - add this if you have user status)
         if (method_exists($user, 'isActive') && !$user->isActive()) {
-            return $this->errorResponse('User account is inactive', 403);
+            return $this->errorResponse('User account (wa_number) is inactive', 403);
         }
 
-        // Add validated user to request for use in controller
-        $request->merge(['validated_user' => $user]);
-        $request->merge(['normalized_phone' => $normalizedPhone]);
+        $request->merge([
+            'validated_user' => $user,
+            'normalized_phone' => $normalizedWaPhone
+        ]);
+
+        // --- Optionally validate to_wa_number ---
+        if (!empty($toWaPhone)) {
+            if (!$this->isValidPhoneFormat($toWaPhone)) {
+                return $this->errorResponse('Invalid phone number format (to_wa_number). Please provide a valid international phone number.', 422);
+            }
+
+            $normalizedToWaPhone = $this->normalizePhoneNumber($toWaPhone);
+            $toUser = User::where('phone', $normalizedToWaPhone)->first();
+            if (!$toUser) {
+                return $this->errorResponse('No user found with this phone number (wa_number)', 404);
+            }
+            $request->merge(['normalized_to_phone' => $normalizedToWaPhone]);
+        }
 
         return $next($request);
     }
@@ -60,56 +70,28 @@ class WhatsappValidationMiddleware
      */
     private function isValidPhoneFormat(string $phone): bool
     {
-        // Remove all non-digit characters except + for initial check
         $cleanPhone = preg_replace('/[^\d+]/', '', $phone);
 
-        // Basic validation rules:
-        // 1. Should start with + or be 10-15 digits
-        // 2. Should contain only digits after country code
-        // 3. Should be between 10-15 digits total (international standard)
-
-        // Check if it starts with + and has 7-15 digits after
-        if (preg_match('/^\+[1-9]\d{6,14}$/', $cleanPhone)) {
-            return true;
-        }
-
-        // Check if it's a local number with 10-15 digits
-        if (preg_match('/^[1-9]\d{9,14}$/', $cleanPhone)) {
-            return true;
-        }
-
-        // Saudi Arabia specific validation (if needed)
-        // Uncomment if you want to specifically validate Saudi numbers
-        // if (preg_match('/^\+966[5][0-9]{8}$/', $cleanPhone)) {
-        //     return true;
-        // }
-
-        return false;
+        return preg_match('/^\+[1-9]\d{6,14}$/', $cleanPhone) ||
+            preg_match('/^[1-9]\d{9,14}$/', $cleanPhone);
     }
 
     /**
-     * Normalize phone number for consistent storage/lookup
+     * Normalize phone number by removing + and leading 0s, and converting to international format
      */
     private function normalizePhoneNumber(string $phone): string
     {
-        // Remove all non-digit characters except +
-        $normalized = preg_replace('/[^\d+]/', '', $phone);
+        $normalized = preg_replace('/\D/', '', $phone);
 
-        // If it doesn't start with +, and it's a Saudi number starting with 05, convert to +966
-        if (!str_starts_with($normalized, '+') && str_starts_with($normalized, '05')) {
-            $normalized = '+966' . substr($normalized, 1);
-        }
-
-        // If it doesn't start with + but looks like a complete international number, add +
-        if (!str_starts_with($normalized, '+') && strlen($normalized) > 10) {
-            $normalized = '+' . $normalized;
+        if (str_starts_with($normalized, '05')) {
+            $normalized = '966' . substr($normalized, 1);
         }
 
         return $normalized;
     }
 
     /**
-     * Return standardized error response
+     * Standardized error response
      */
     private function errorResponse(string $message, int $statusCode): JsonResponse
     {

@@ -4,6 +4,8 @@ namespace App\Http\Requests;
 
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class CreateInvoiceRequest extends FormRequest
@@ -24,48 +26,45 @@ class CreateInvoiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'for_type'             => ['required', 'string'],
-            'for_id'               => ['required', 'integer'],
-            'from_type'            => ['required', 'string'],
-            'from_id'              => ['required', 'integer'],
-            'branch_id'            => ['nullable', 'exists:branches,id'],
-            'category_id'          => ['nullable', 'exists:categories,id'],
             'name'                 => ['required', 'string', 'max:255'],
-            'phone'                => ['nullable', 'string', 'max:255'],
+            'wa_number'            => ['nullable', 'string', 'max:255'],
+            'to_wa_number'         => ['nullable', 'string', 'max:255'],
             'address'              => ['nullable', 'string', 'max:255'],
             'type'                 => ['nullable', 'string', 'in:push,pull'],
             'total'                => ['required', 'numeric', 'min:0'],
             'discount'             => ['required', 'numeric', 'min:0'],
             'shipping'             => ['required', 'numeric', 'min:0'],
             'vat'                  => ['required', 'numeric', 'min:0'],
-            'paid'                 => ['required', 'numeric', 'min:0'],
             'date'                 => ['nullable', 'date'],
             'due_date'             => ['nullable', 'date'],
-            'is_offer'             => ['nullable', 'boolean'],
-            'insert_in_to_inventory' => ['nullable', 'boolean'],
-            'send_email'           => ['nullable', 'boolean'],
-            'currency_id'          => ['nullable', 'exists:currencies,id'],
-            'is_bank_transfer'     => ['nullable', 'boolean'],
             'notes'                => ['nullable', 'string'],
-            'channel'                => ['nullable', 'string'],
-            'qty'                => ['nullable', 'string'],
+            'qty'                  => ['nullable', 'string'],
         ];
     }
 
     public function validated($key = null, $default = null)
     {
         $data = parent::validated($key, $default);
-        $user = User::query()->with('tenant')->where('phone', $data['phone'])->first();
+        $senderUser = User::query()->with('tenant')->where('phone', $data['wa_number'])->first();
+        $toUser = User::query()->with('tenant')->where('phone', $data['to_wa_number'])->first();
+        $data['user_id'] = $senderUser?->id ?? auth()->user()?->id;
+        $data['channel'] = "whatsapp";
         $data['uuid'] = (string) Str::uuid();
-        $data['for_type'] = "App\Models" . "\\". $data['for_type'];
-        $data['from_type'] = "App\Models" . "\\". $data['from_type'];
-        if ($user && $user->tenant_id){
-            $data['user_id'] = $user->id;
-            $data['tenant_id'] = $user->tenant->id;
-            $data['bank_account'] = $user->tenant->bank_name;
-            $data['bank_account_owner'] = $user->tenant->bank_holder_name;
-            $data['bank_name'] = $user->tenant->bank_name;
-            $data['bank_iban'] = $user->tenant->iban;
+        if ($senderUser && $senderUser->tenant_id){
+            $data['from_id'] = $senderUser->id;
+            $data['tenant_id'] = $senderUser->tenant->id;
+            $data['bank_account'] = $senderUser->tenant->bank_name;
+            $data['bank_account_owner'] = $senderUser->tenant->bank_holder_name;
+            $data['bank_name'] = $senderUser->tenant->bank_name;
+            $data['bank_iban'] = $senderUser->tenant->iban;
+            $data['currency_id'] = DB::table('currencies')->where('iso', "SAR")->first()->id;
+            $data['from_type'] = "App\Models\Tenant";
+            $data['for_type'] = "App\Models\Customer";
+            $data['vat'] = config('services.invoice.vat_percentage');
+        }
+
+        if ($toUser){
+            $data['for_id'] = $toUser->id;
         }
 
         return $data;
