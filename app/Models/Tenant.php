@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
+use TomatoPHP\FilamentLocations\Models\Location;
 
 class Tenant extends Model
 {
@@ -31,5 +32,10 @@ class Tenant extends Model
         static::creating(function ($model) {
             $model->slug = Str::slug($model->name);
         });
+    }
+
+    public function locations()
+    {
+        return $this->morphMany(Location::class, 'model');
     }
 }

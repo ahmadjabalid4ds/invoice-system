@@ -21,7 +21,7 @@ Route::prefix('v1')->group(function () {
 
     Route::prefix('invoice')->group(function () {
         Route::get('index', [WhatsappInvoiceController::class, 'index']);
-        Route::post('storeInvoice', [WhatsappInvoiceController::class, 'store']);
-        Route::post('validateWhatsapp', [WhatsappInvoiceController::class, 'validateWhatsapp']);
+        Route::post('store-invoice', [WhatsappInvoiceController::class, 'store']);
+        Route::post('validate-whatsapp', [WhatsappInvoiceController::class, 'validateWhatsapp']);
     });
 });

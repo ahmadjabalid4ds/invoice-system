@@ -18,6 +18,7 @@ use Filament\Tables\Enums\ActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use TomatoPHP\FilamentInvoices\Facades\FilamentInvoices;
 use TomatoPHP\FilamentLocations\Models\Currency;
 use TomatoPHP\FilamentTypes\Components\TypeColumn;
@@ -127,7 +128,9 @@ class InvoiceResource extends Resource
                     ->searchable()
                     ->live()
                     ->options(FilamentInvoices::getFrom()->pluck('label', 'model')->toArray())
-                    ->columnSpanFull(),
+                    ->columnSpanFull()
+                    ->disabled()
+                    ->default('Tenant'),
 
                 Forms\Components\Select::make('from_id')
                     ->label(trans('messages.invoices.sections.from_type.columns.from'))
@@ -142,7 +145,7 @@ class InvoiceResource extends Resource
                         $config = FilamentInvoices::getFrom()->where('model', $get('from_type'))->first();
                         $column = $config?->column ?? 'name';
 
-                        return $get('from_type')::query()->pluck($column, 'id')->toArray();
+                        return ("App\\Models\\" . $get('from_type'))::query()->pluck($column, 'id')->toArray();
                     })
                     ->columnSpanFull(),
             ])
@@ -161,6 +164,8 @@ class InvoiceResource extends Resource
                     ->searchable()
                     ->required()
                     ->live()
+                    ->disabled()
+                    ->default('Tenant')
                     ->options(FilamentInvoices::getFor()->pluck('label', 'model')->toArray())
                     ->columnSpanFull(),
 
@@ -179,7 +184,7 @@ class InvoiceResource extends Resource
                         $config = FilamentInvoices::getFor()->where('model', $get('for_type'))->first();
                         $column = $config?->column ?? 'name';
 
-                        return $get('for_type')::query()->pluck($column, 'id')->toArray();
+                        return ("App\\Models\\" . $get('for_type'))::query()->pluck($column, 'id')->toArray();
                     })
                     ->columnSpanFull(),
             ])
@@ -242,6 +247,8 @@ class InvoiceResource extends Resource
                     ->columnSpanFull()
                     ->default(Currency::query()->where('iso', 'USD')->first()?->id)
                     ->searchable()
+                    ->disabled()
+                    ->default(DB::table('currencies')->where('iso', 'SAR')->first()->id)
                     ->options(Currency::query()->pluck('name', 'id')->toArray()),
             ])
             ->columns(2)
@@ -291,7 +298,8 @@ class InvoiceResource extends Resource
                 Forms\Components\TextInput::make('vat')
                     ->label(trans('messages.invoices.columns.vat'))
                     ->columnSpan(2)
-                    ->default(0)
+                    ->default(config('services.invoice.vat_percentage'))
+                    ->disabled()
                     ->numeric(),
 
                 Forms\Components\TextInput::make('total')
@@ -526,7 +534,7 @@ class InvoiceResource extends Resource
             $forId = $get('for_id');
 
             if ($forType && $forId) {
-                $for = $forType::find($forId);
+                $for = ("App\\Models\\" . $forType)::find($forId);
                 if ($for) {
                     $set('name', $for->name ?? null);
                     $set('phone', $for->phone ?? null);
