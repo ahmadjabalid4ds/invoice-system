@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 
@@ -54,18 +55,17 @@ class CreateInvoiceRequest extends FormRequest
     public function validated($key = null, $default = null)
     {
         $data = parent::validated($key, $default);
-        $user = auth()->user();
+        $user = User::query()->with('tenant')->where('phone', $data['phone'])->first();
         $data['uuid'] = (string) Str::uuid();
         $data['for_type'] = "App\Models" . "\\". $data['for_type'];
         $data['from_type'] = "App\Models" . "\\". $data['from_type'];
         if ($user && $user->tenant_id){
-            $user->load('tenant');
-            $data['user_id'] = auth()->user()->id;
-            $data['tenant_id'] = auth()->user()->tenant->id;
-            $data['bank_account'] = auth()->user()->tenant->bank_name;
-            $data['bank_account_owner'] = auth()->user()->tenant->bank_holder_name;
-            $data['bank_name'] = auth()->user()->tenant->bank_name;
-            $data['bank_iban'] = auth()->user()->tenant->iban;
+            $data['user_id'] = $user->id;
+            $data['tenant_id'] = $user->tenant->id;
+            $data['bank_account'] = $user->tenant->bank_name;
+            $data['bank_account_owner'] = $user->tenant->bank_holder_name;
+            $data['bank_name'] = $user->tenant->bank_name;
+            $data['bank_iban'] = $user->tenant->iban;
         }
 
         return $data;

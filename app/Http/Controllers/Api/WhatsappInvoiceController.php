@@ -6,8 +6,10 @@ use App\Http\Requests\CreateInvoiceRequest;
 use App\Http\Requests\ValidateWhastappRequest;
 use App\Http\Resources\UserResource;
 use App\Models\Invoice;
+use App\Models\InvoiceItem;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class WhatsappInvoiceController extends BaseApiController
 {
@@ -33,12 +35,19 @@ class WhatsappInvoiceController extends BaseApiController
     {
         $data = $request->validated();
         $invoice = Invoice::query()->create($data);
+        $items = InvoiceItem::query()->create([
+            'invoice_id' => $invoice->id,
+            'price' => $invoice->total,
+            'total' => $invoice->total,
+        ]);
         return $this->successResponse($invoice, 'Invoice Created Successfully', 201);
     }
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $invoices = Invoice::query()->where('user_id', auth()->user()?->id)->get();
+        $phone = $request->input('phone');
+        $user = User::where('phone', $phone)->first();
+        $invoices = Invoice::query()->where('user_id', $user->id)->get();
         return $this->successResponse($invoices, 'Invoices Retrieved Successfully', 201);
     }
 }
