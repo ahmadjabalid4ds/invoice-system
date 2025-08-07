@@ -130,23 +130,39 @@ class InvoiceResource extends Resource
                     ->options(FilamentInvoices::getFrom()->pluck('label', 'model')->toArray())
                     ->columnSpanFull()
                     ->disabled()
-                    ->default('Tenant'),
+                    ->default('Tenant')
+                    ->dehydrated(true), // Ensure the value is saved
 
                 Forms\Components\Select::make('from_id')
                     ->label(trans('messages.invoices.sections.from_type.columns.from'))
                     ->required()
-                    ->searchable()
-                    ->disabled(fn(Forms\Get $get) => !$get('from_type'))
+                    ->disabled()
                     ->options(function (Forms\Get $get) {
-                        if (!$get('from_type')) {
+                        try {
+                            $fromType = $get('from_type') ?: 'Tenant';
+                            $modelClass = "App\\Models\\" . $fromType;
+
+                            if (!class_exists($modelClass)) {
+                                return [];
+                            }
+
+                            $tenantId = auth()->user()?->tenant_id;
+                            if (!$tenantId) {
+                                return [];
+                            }
+
+                            return $modelClass::query()
+                                ->where('id', $tenantId)
+                                ->pluck('name', 'id')
+                                ->toArray();
+                        } catch (\Exception $e) {
                             return [];
                         }
-
-                        $config = FilamentInvoices::getFrom()->where('model', $get('from_type'))->first();
-                        $column = $config?->column ?? 'name';
-
-                        return ("App\\Models\\" . $get('from_type'))::query()->pluck($column, 'id')->toArray();
                     })
+                    ->default(function () {
+                        return auth()->user()?->tenant_id;
+                    })
+                    ->dehydrated(true) // Ensure the value is saved
                     ->columnSpanFull(),
             ])
             ->columns(2)
@@ -165,7 +181,7 @@ class InvoiceResource extends Resource
                     ->required()
                     ->live()
                     ->disabled()
-                    ->default('Tenant')
+                    ->default('Customer')
                     ->options(FilamentInvoices::getFor()->pluck('label', 'model')->toArray())
                     ->columnSpanFull(),
 
@@ -183,8 +199,9 @@ class InvoiceResource extends Resource
 
                         $config = FilamentInvoices::getFor()->where('model', $get('for_type'))->first();
                         $column = $config?->column ?? 'name';
+                        $user = auth()->user();
 
-                        return ("App\\Models\\" . $get('for_type'))::query()->pluck($column, 'id')->toArray();
+                        return ("App\\Models\\" . $get('for_type'))::query()->where('tenant_id', $user->tenant_id)->pluck($column, 'id')->toArray();
                     })
                     ->columnSpanFull(),
             ])
@@ -557,14 +574,31 @@ class InvoiceResource extends Resource
                 $qty = (float) ($invoiceItem['qty'] ?? 1);
                 $price = (float) ($invoiceItem['price'] ?? 0);
                 $itemDiscount = (float) ($invoiceItem['discount'] ?? 0);
-                $itemVat = (float) ($invoiceItem['vat'] ?? 0);
+                $itemVatRate = (float) ($invoiceItem['vat'] ?? 0); // This should be VAT percentage (e.g., 15 for 15%)
 
-                $itemTotal = (($price + $itemVat) - $itemDiscount) * $qty;
+                // Calculate subtotal (price * quantity)
+                $subtotal = $price * $qty;
+
+                // Calculate discount amount
+                $discountAmount = $itemDiscount * $qty;
+
+                // Calculate amount after discount
+                $amountAfterDiscount = $subtotal - $discountAmount;
+
+                // Calculate VAT amount (VAT rate as percentage of amount after discount)
+                $itemVatAmount = ($amountAfterDiscount * $itemVatRate) / 100;
+
+                // Calculate final total (amount after discount + VAT)
+                $itemTotal = $amountAfterDiscount + $itemVatAmount;
+
+                // Update totals
                 $total += $itemTotal;
+                $discount += $discountAmount;
+                $vat += $itemVatAmount;
 
+                // Store the calculated values back to the item
                 $invoiceItem['total'] = $itemTotal;
-                $discount += ($itemDiscount * $qty);
-                $vat += ($itemVat * $qty);
+                $invoiceItem['calculated_vat_amount'] = $itemVatAmount; // Optional: store calculated VAT amount
 
                 $collectItems[] = $invoiceItem;
             }

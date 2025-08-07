@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\WhatsappInvoiceController;
+use App\Http\Middleware\WhatsappValidationMiddleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -19,7 +20,7 @@ Route::prefix('v1')->group(function () {
         });
     });
 
-    Route::prefix('invoice')->group(function () {
+    Route::prefix('whatsapp')->middleware(WhatsappValidationMiddleware::class)->group(function () {
         Route::get('index', [WhatsappInvoiceController::class, 'index']);
         Route::post('store-invoice', [WhatsappInvoiceController::class, 'store']);
         Route::post('validate-whatsapp', [WhatsappInvoiceController::class, 'validateWhatsapp']);
