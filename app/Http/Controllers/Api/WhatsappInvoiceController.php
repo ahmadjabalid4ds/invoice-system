@@ -16,7 +16,7 @@ class WhatsappInvoiceController extends BaseApiController
     public function validateWhatsapp(ValidateWhastappRequest $request): JsonResponse
     {
         $data = $request->validated();
-        $user = User::where('phone', $data['phone'])->first();
+        $user = User::where('phone', $data['normalized_phone'])->first();
 
         if (!$user?->phone) {
             return $this->unauthorizedResponse('User not found');
