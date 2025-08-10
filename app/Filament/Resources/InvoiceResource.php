@@ -7,6 +7,7 @@ use App\Filament\Resources\InvoiceResource\Pages;
 use App\Filament\Resources\InvoiceResource\RelationManagers;
 use App\Filament\Resources\InvoiceResource\Widgets\InvoiceStatsWidget;
 use App\Models\Invoice;
+use App\Models\SystemSetting;
 use App\Utils\Helper;
 use Carbon\Carbon;
 use Filament\Forms;
@@ -315,7 +316,7 @@ class InvoiceResource extends Resource
                 Forms\Components\TextInput::make('vat')
                     ->label(trans('messages.invoices.columns.vat'))
                     ->columnSpan(2)
-                    ->default(config('services.invoice.vat_percentage'))
+                    ->default(SystemSetting::latest()->first()?->vat_percentage ?? 15)
                     ->disabled()
                     ->numeric(),
 
