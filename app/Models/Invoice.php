@@ -27,7 +27,6 @@ class Invoice extends BaseInvoice
         'from_type',
         'for_id',
         'for_type',
-        'order_id',
         'user_id',
         'category_id',
         'uuid',
