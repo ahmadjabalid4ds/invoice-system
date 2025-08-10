@@ -22,7 +22,7 @@ class ValidateWhastappRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'phone' => ['required', 'string']
+            'normalized_phone' => ['required', 'string']
         ];
     }
 }
