@@ -75,7 +75,7 @@ class Invoice extends BaseInvoice
                 $model->currency_id = DB::table('currencies')->where('iso', "SAR")->first()->id;
                 $model->from_type = "App\Models\Tenant";
                 $model->for_type = "App\Models\Customer";
-                $model->vat = config('services.invoice.vat_percentage');
+                $model->vat = SystemSetting::latest()->first()?->vat_percentage ?? 15;
             }
         });
     }

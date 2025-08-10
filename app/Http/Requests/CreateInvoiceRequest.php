@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\SystemSetting;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\DB;
@@ -60,7 +61,7 @@ class CreateInvoiceRequest extends FormRequest
             $data['currency_id'] = DB::table('currencies')->where('iso', "SAR")->first()->id;
             $data['from_type'] = "App\Models\Tenant";
             $data['for_type'] = "App\Models\Customer";
-            $data['vat'] = config('services.invoice.vat_percentage');
+            $data['vat'] = SystemSetting::latest()->first()?->vat_percentage ?? 15;
         }
 
         if ($toUser){
