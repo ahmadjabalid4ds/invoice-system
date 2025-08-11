@@ -64,7 +64,7 @@ class User extends Authenticatable
 
     public function isTenantAdmin()
     {
-        return $this->tenant->owner_id == $this->id;
+        return $this->tenant?->owner_id == $this->id;
     }
 
     public function tenant(): BelongsTo

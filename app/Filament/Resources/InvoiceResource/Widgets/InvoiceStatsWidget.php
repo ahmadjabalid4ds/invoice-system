@@ -9,7 +9,11 @@ class InvoiceStatsWidget extends StatsOverviewWidget
 {
     public function getStats(): array
     {
+        $user = auth()->user();
         $query = Invoice::query();
+        if ($user->isTenantAdmin()){
+            $query->where('tenant_id', $user->tenant_id);
+        }
         return [
             StatsOverviewWidget\Stat::make(trans('filament-invoices::messages.invoices.widgets.count'), "")
                 ->icon('heroicon-o-currency-dollar')
