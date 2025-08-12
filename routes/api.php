@@ -22,7 +22,7 @@ Route::prefix('v1')->group(function () {
 
     Route::prefix('whatsapp')->middleware(WhatsappValidationMiddleware::class)->group(function () {
         Route::get('index', [WhatsappInvoiceController::class, 'index']);
-        Route::post('store-invoice', [WhatsappInvoiceController::class, 'store']);
-        Route::post('validate-whatsapp', [WhatsappInvoiceController::class, 'validateWhatsapp']);
+        Route::match(['GET', 'POST'], 'store-invoice', [WhatsappInvoiceController::class, 'store']);
+        Route::match(['GET', 'POST'], 'validate-whatsapp', [WhatsappInvoiceController::class, 'validateWhatsapp']);
     });
 });
