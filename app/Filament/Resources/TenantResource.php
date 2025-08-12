@@ -83,14 +83,10 @@ class TenantResource extends Resource
                     ->label('Total Invoices')
                     ->counts('invoices')
                     ->sortable(),
-                // Latest invoice date
-                Tables\Columns\TextColumn::make('latest_invoice_date')
-                    ->label('Latest Invoice')
-                    ->getStateUsing(function (Tenant $record) {
-                        $latestInvoice = $record->invoices()->latest()->first();
-                        return $latestInvoice ? $latestInvoice->created_at->format('M d, Y') : 'No invoices';
-                    })
-                    ->sortable(),
+                // Invoices dropdown
+                Tables\Columns\ViewColumn::make('invoices')
+                    ->label('Invoices')
+                    ->view('filament.tables.columns.invoices-dropdown'),
                 // Total invoice amount (if your Invoice model has an 'amount' field)
                 Tables\Columns\TextColumn::make('total_invoice_amount')
                     ->label('Total Amount')
