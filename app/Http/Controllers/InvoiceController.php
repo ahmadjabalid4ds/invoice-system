@@ -18,7 +18,7 @@ class InvoiceController extends Controller
     }
     public function index($id)
     {
-        $invoice = Invoice::find($id);
+        $invoice = Invoice::query()->where('uuid', $id)->first();
         if (!$invoice || !$invoice->canBePaid()) {
             abort(404, 'Invoice not found');
         }
