@@ -28,6 +28,8 @@ return [
 
     'env' => env('APP_ENV', 'production'),
 
+    'api_token' => env('STATIC_API_TOKEN', 'whatsapp_api_2025_secure_token_x9k2m8n5_yafi'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Debug Mode

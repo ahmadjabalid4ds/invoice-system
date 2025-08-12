@@ -2,11 +2,12 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\WhatsappInvoiceController;
+use App\Http\Middleware\CheckApiToken;
 use App\Http\Middleware\WhatsappValidationMiddleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('v1')->group(function () {
+Route::prefix('v1')->middleware(CheckApiToken::class)->group(function () {
 
     Route::get('/user', function (Request $request) {
         return $request->user();
