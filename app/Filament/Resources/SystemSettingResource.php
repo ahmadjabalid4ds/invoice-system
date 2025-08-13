@@ -23,6 +23,8 @@ class SystemSettingResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('vat_percentage')
                     ->required()
+                    ->minValue(0)
+                    ->maxValue(99)
                     ->numeric(),
             ]);
     }
