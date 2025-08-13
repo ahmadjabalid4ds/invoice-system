@@ -33,6 +33,7 @@ class ListInvoices extends ListRecords
             Actions\CreateAction::make(),
             Actions\Action::make('setting')
                 ->hiddenLabel()
+                ->disabled()
                 ->tooltip(trans('filament-invoices::messages.invoices.actions.invoices_status'))
                 ->icon('heroicon-o-cog')
                 ->color('info')
