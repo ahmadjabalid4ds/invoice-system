@@ -78,6 +78,23 @@ class TenantResource extends Resource
                 Tables\Columns\TextColumn::make('owner.name')
                     ->numeric()
                     ->sortable(),
+                // Invoice count column
+                Tables\Columns\TextColumn::make('invoices_count')
+                    ->label('Total Invoices')
+                    ->counts('invoices')
+                    ->sortable(),
+                // Invoices dropdown
+                Tables\Columns\ViewColumn::make('invoices')
+                    ->label('Invoices')
+                    ->view('filament.tables.columns.invoices-dropdown'),
+                // Total invoice amount (if your Invoice model has an 'amount' field)
+                Tables\Columns\TextColumn::make('total_invoice_amount')
+                    ->label('Total Amount')
+                    ->getStateUsing(function (Tenant $record) {
+                        return $record->invoices()->sum('total');
+                    })
+                    ->money('SAR') // Adjust currency as needed
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -90,23 +107,30 @@ class TenantResource extends Resource
                     ->boolean(),
             ])
             ->filters([
-                //
+                // Add filter for tenants with/without invoices
+                Tables\Filters\TernaryFilter::make('has_invoices')
+                    ->label('Has Invoices')
+                    ->queries(
+                        true: fn (Builder $query) => $query->has('invoices'),
+                        false: fn (Builder $query) => $query->doesntHave('invoices'),
+                    ),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                // Add action to view invoices
+                Tables\Actions\Action::make('view_invoices')
+                    ->label('View Invoices')
+                    ->icon('heroicon-o-document-text')
+                    ->url(fn (Tenant $record) => route('filament.admin.resources.invoices.index', [
+                        'tableFilters[tenant_id][value]' => $record->id
+                    ]))
+                    ->openUrlInNewTab(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
     }
 
     public static function getPages(): array
