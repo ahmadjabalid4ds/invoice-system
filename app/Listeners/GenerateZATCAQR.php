@@ -42,8 +42,6 @@ class GenerateZATCAQR
             new InvoiceTaxAmount($invoice->vat)
         ])->toBase64();
 
-        Log::info("Generated QR:" . $generatedString);
-
         $invoice->update(['zatca_qr' => $generatedString]);
     }
 }
